@@ -12,7 +12,7 @@ This repository maintains the code for this project.
 
   The package contains the four methods (top-down and bottom-up approach, for low-dimensional settings, and high-dimensional settings.) Among the methods, high-dimensional bottom-up is implemented with the CLIME estimator, as proposed in [Ghoshal and Honorio (2018)][http://proceedings.mlr.press/v84/ghoshal18a/]. The package can be installed by `devtools` 
 
-  ```
+  ```R
   # install.packages("devtools")
   devtools::install_github("WY-Chen/EqVarDAG")
   ```
@@ -21,7 +21,7 @@ This repository maintains the code for this project.
 
   In low dimensional settings, we compare our algorithms with the Greedy DAG Search algorithm (GDS) proposed by [Peters and B&uuml;hlmann (2014)][https://doi.org/10.1093/biomet/ast043]. The GDS algorithm is implemented in the supplement of said paper. A slightly modified version is maintained in this repository. 
 
-  ```r
+  ```R
   # download this repository
   setwd(dir = "/some/path/")
   download.file(url = "https://github.com/WY-Chen/EqVarDAG/archive/master.zip",
