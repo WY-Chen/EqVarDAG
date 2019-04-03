@@ -1,0 +1,29 @@
+Package: EqVarDAG
+Type: Package
+Title: Causal Discovery with Equal Variance Assumption
+Version: 2.0
+Authors@R: as.person(c(
+    "Wenyu Chen <wenyuc@uw.edu> [aut, cre]", 
+    "Mathias Drton <md5@uw.edu> [aut]",
+    "Y.Samuel Wang <swang24@uchicago.edu> [aut]"
+  ))
+Maintainer: Wenyu Chen <wenyuc@uw.edu>
+Description: Prior work has shown that causal structure can be 
+    uniquely identified from observational data when these follow a 
+    structural equation model whose error terms have equal variances. 
+    We show that this fact is implied by an ordering among (conditional) variances. 
+    We demonstrate that ordering estimates of these variances yields 
+    a simple yet state-of-the-art method for causal structure learning 
+    that is readily extendable to high-dimensional problems.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
+Imports: 
+    cvTools,
+    glmnet,
+    leaps,
+    RcppEigen,
+    gtools,
+    Rglpk
+    
