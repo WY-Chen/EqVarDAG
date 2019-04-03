@@ -55,7 +55,7 @@ EqVarDAG_HD_CLIME(X,cv=FALSE,lambdafix)
 
 The details of the simulation settings are specified in our paper. 
 
- Low dimensional simulation with $p$ variables and $n$ data can be performed by calling
+ Low dimensional simulation with N replicates, each problem with p variables and n data can be performed by calling
 
 ```R
 # run simulations
