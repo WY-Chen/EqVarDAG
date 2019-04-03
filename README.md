@@ -28,7 +28,7 @@ This repository maintains the code for this project.
                 destfile = "EqVarDAG.zip")
   # unzip the .zip file
   unzip(zipfile = "EqVarDAG.zip")
-  setwd(dir = "/some/path/EqVarDAG")
+  setwd(dir = "/some/path/EqVarDAG-master")
   ```
 
 ## Methods
