@@ -23,9 +23,6 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load(foreach,doSNOW,doParallel,cvTools,Rglpk,
                lattice,bnlearn,matrixcalc,Kendall,glmnet)
 
-wd<-getwd()
-source("../EqVarDAG_HD_CLIME.R")
-source("../EqVarDAG_HD_TD.R")
 
 ###############
 ### helper functions

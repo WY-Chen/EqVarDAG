@@ -27,8 +27,6 @@ pacman::p_load(foreach,doSNOW,doParallel,
                lattice,bnlearn,matrixcalc,Kendall,glmnet)
 
 wd<-getwd()
-source("../EqVarDAG_BU.R")
-source("../EqVarDAG_TD.R")
 setwd("../GDS/startups/")
 source("startupGDS.R")
 setwd(wd)
