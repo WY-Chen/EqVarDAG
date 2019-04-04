@@ -68,6 +68,6 @@ High dimensional simulation is implemented with varies graph types, specified in
 ```R
 # run simulations
 source("/some/path/EqVarDAG/Experiments/sim_script_highD.R")
-simulation_highD(p,n,N,type) 	# low-dimensional settings
+simulation_highD(p,n,N,type) 	# high-dimensional settings
 ```
 
