@@ -106,7 +106,7 @@ EqVarDAG_HD_CLIME_internal<-function(X,cv=T,lambdafix=0.1){
         for (j in supp_changed){
           supp_j<-union(supp_changed,which(Omega_temp[j,]!=0))
           supp_j<-sort(supp_j[!supp_j%in% Theta])
-          if (!invalid(supp_j)&length(supp_j)>1){
+          if (!gtools::invalid(supp_j)&length(supp_j)>1){
             w_j<-clime_lp(S[supp_j,supp_j],which(supp_j==j),l)
             Omega_temp[j,supp_j]<-w_j
             Omega_temp[supp_j,j]<-w_j
