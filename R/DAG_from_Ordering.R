@@ -37,7 +37,7 @@ DAG_from_Ordering<-function(X,TO,mtd="ztest",alpha=0.05,
       for (j in 1:(i-1)){
         v = TO[j]
         s = setdiff(TO[seq(i-1)],v)
-        pval = 1-(2*pnorm(abs(zStat(u,v,s,C=C,n=n)))-1)^(p*(p-1)/2)
+        pval = 1-(2*pnorm(abs(pcalg::zStat(u,v,s,C=C,n=n)))-1)^(p*(p-1)/2)
         adj[v,u]=ifelse(pval<alpha,1,0)
       }
     }
