@@ -1,15 +1,29 @@
-# Copyright (c) 2018 - 2019  Wenyu Chen [wenyuc@uw.edu]
+# Copyright (c) 2018 - 2020  Wenyu Chen [wenyuc@uw.edu]
 # All rights reserved.  See the file COPYING for license terms.
 
 ###############
 ### Main method with high-dimensional bottom-up CLIME approach
 ###############
 #' Estimate topological ordering and DAG using high dimensional bottom-up CLIME approach
-#'
-#' @param X An n-by-p data matrix.
-#' @param cv Obtain regularization parameter by cross-validation or use speficied value. Default True.
-#' @param lambdafix Specified lambda. (If cv=F).
-#' @return Estimated Adjacency matrix and topological ordering.
+#' Estimate  DAG using topological ordering
+#' @param X,Y: n x p and 1 x p matrix
+#' @param alpha: desired selection significance level
+#' @param mtd: methods for learning DAG from topological orderings.
+#'  "ztest": (p<n) [Multiple Testing and Error Control in Gaussian Graphical Model Selection. Drton and Perlman.2007]
+#'  "rls": (p<n) fit recursive least squares using ggm package and threshold the regression coefs
+#'  "chol": (p<n) perform cholesky decomposition and threshold the regression coefs
+#'  "dlasso": debiased lasso (default with FCD=True and precmtd="sqrtlasso");
+#'   "lasso": lasso with fixed lambda from [Penalized likelihood methods for estimation of sparse high-dimensional directed acyclic graphs. Shojaie and Michailidis. 2010];
+#'   "adalasso": adaptive lasso with fixed lambda from [Shojaie and Michailidis. 2010];
+#'   "cvlasso": cross-validated lasso from glmnet;
+#'    "scallasso": scaled lasso.
+#' @param threshold: for rls and chol, the threshold level.
+#' @param FCD: for debiased lasso, use the FCD procedure [False Discovery Rate Control via Debiased Lasso. Javanmard and Montanari. 2018]
+#' or use individual tests to select support.
+#' @param precmtd: for debiased lasso, how to compute debiasing matrix
+#'               "cv": node-wise lasso w/ joint 10 fold cv
+#'               "sqrtlasso": square-root lasso (no tune, default)
+#' @return Adjacency matrix with ADJ[i,j]!=0 iff i->j, and topological ordering
 #' @examples
 #' X1<-rnorm(100)
 #' X2<-X1+rnorm(100)
@@ -22,7 +36,8 @@
 #' #
 #' #$TO
 #' #[1] 1 2
-EqVarDAG_HD_CLIME<-function(X,cv=T,lambdafix=0.1){
+EqVarDAG_HD_CLIME<-function(X,lambda=NULL,mtd="ztest",alpha=0.05,
+                            threshold=1e-1,FCD=NULL,precmtd=NULL){
   # Input
   # X : n by p matrix of data
   # cv: if true, use cv-ed lambda, else use lambdafix,default True
@@ -32,141 +47,93 @@ EqVarDAG_HD_CLIME<-function(X,cv=T,lambdafix=0.1){
   # TO : estimated topological ordering
   n<-dim(X)[1]
   p<-dim(X)[2]
-  rr<-rev(EqVarDAG_HD_CLIME_internal(X,cv,lambdafix))
-  result<-matrix(0,p,p)
-  for (ii in 1:(p-1)){
-    now<-rr[ii]
-    this<-sort(rr[(ii+1):p])
-    if (length(this)>1){
-      # variable selection
-      if (n>100){
-        lassom<-glmnet::cv.glmnet(X[,this],X[,now]  )
-        bfit<-coefficients(lassom)[-1]
-      } else {
-        lassom<-glmnet::glmnet(X[,this],X[,now] )
-        bic<-n*log(colSums((predict(lassom,X[,this])-X[,now])^2)/n)+lassom$df*log(n)+
-          2*lassom$df*log(p-ii)
-        bfit<-coefficients(lassom)[,which(bic==min(bic))[1]][-1]
-      }
-      for (jj in 1:length(this)){
-        if(bfit[jj]!=0)
-          result[this[jj],now]<-1
-      }
-    } else {
-      # deal with the last two nodes
-      lmod<-summary(RcppEigen::fastLm(X[,now]~X[,this]))
-      if (lmod$coef[2,4]<0.05) {
-        result[this,now]<-1
-      }
-    }
-  }
-  return(list(adj=result,TO=rev(rr)))
+  TO=EqVarDAG_HD_CLIME_internal(X,lambda)
+  adj=DAG_from_Ordering(X,TO,mtd,alpha,threshold,FCD,precmtd)
+  return(list(adj=adj,TO=TO))
 }
 
 
 ###############
 ### helper functions
 ###############
-# estimate topological ordering
-EqVarDAG_HD_CLIME_internal<-function(X,cv=T,lambdafix=0.1){
-  p<-dim(X)[2]
-  n<-dim(X)[1]
-  S<-cov(X)
-  Theta<-rep(0,p)
-  lambda<- exp(-seq(0.2,7,length.out = 10))
-  # 4-fold cv
-  if (cv){
-    cv.folds<-cvTools::cvFolds(n,4)
-    lik<-rep(0,length(lambda))
-    for (k in 1:4){
-      x.test<-X[cv.folds$which==k,]
-      x.fit <-X[cv.folds$which!=k,]
-      S.fit <- cov(x.fit)
-      S.test<- cov(x.test)
-      out<-lapply(lambda,function(l){clime(S.fit,l)})
-      lik<-lik+sapply(out, function(t)sum(diag(t%*%S.test))-
-                        log(det(t))+
-                        (sum(t!=0)-p)/2*(log(p)+log(n)))
-    }
-    Omega<-clime(S,lambda[which.min(lik)])
-  } else {
-    Omega<-clime(S,lambdafix)
-  }
-  # first variable
-  Theta[1]<-which.min(diag(Omega))
-  # other variables
-  for (i in 2:(p-2)){
-    supp_changed<-which(Omega[Theta[i-1],]!=0)
-    supp_changed<-supp_changed[!supp_changed%in% Theta]
-    if (cv){
-      # using cv-ed CLIME
-      lik<-NULL
-      out<-lapply(lambda, function(l){
-        Omega_temp<-Omega
-        for (j in supp_changed){
-          supp_j<-union(supp_changed,which(Omega_temp[j,]!=0))
-          supp_j<-sort(supp_j[!supp_j%in% Theta])
-          if (!gtools::invalid(supp_j)&length(supp_j)>1){
-            w_j<-clime_lp(S[supp_j,supp_j],which(supp_j==j),l)
-            Omega_temp[j,supp_j]<-w_j
-            Omega_temp[supp_j,j]<-w_j
-          }
-        }
-        Omega_temp[Theta[i-1],]<-0
-        Omega_temp[,Theta[i-1]]<-0
-        lik<-sum(diag(Omega_temp[-Theta[seq(i)],-Theta[seq(i)]]%*%
-                        S[-Theta[seq(i)],-Theta[seq(i)]]-diag(p-i+1))^2)
-        return(list(Omega_temp=Omega_temp,lik=lik))
-      })
-      Omega<-out[[which.min(sapply(out, function(x)x$lik))]]$Omega_temp
-    } else {
-      # Using fix-lambda CLIME
-      for (j in supp_changed){
-        supp_j<-union(supp_changed,which(Omega[j,]!=0))
-        supp_j<-sort(supp_j[!supp_j%in% Theta])
-        if (!gtools::invalid(supp_j)&length(supp_j)>1){
-          w_j<-clime_lp(S[supp_j,supp_j],which(supp_j==j),lambdafix) # lambda
-          Omega[j,supp_j]<-w_j
-          Omega[supp_j,j]<-w_j
-        } else if (length(supp_j)==1){
-          Omega[j,j]<-1/S[j,j]
-        }
+EqVarDAG_HD_CLIME_internal<-function(X,lam=NULL){
+  # (i,j)=1 in fixedorder means i is ancestral to j
+  n=dim(X)[1]
+  p=dim(X)[2]
+  Sigma=cov(X)
+  if (is.null(lam)){lam = 4/sqrt(n)*sqrt(log(p/sqrt(0.05)))}
+  Theta=clime_theta(X)
+  TO=NULL
+  while (length(TO)<p-1){
+    sink=which.min(diag(Theta))
+    TO=c(TO,sink)
+    s = setdiff(which(Theta[,sink]!=0),sink)
+    for (j in s){
+      sj = unique(c(j,setdiff(which(Theta[,j]!=0),sink),s))
+      if (length(sj)==1){
+        Theta[j,sj]=Theta[sj,j]=1/Sigma[sj,sj]
+      } else {
+        Theta[j,sj]=Theta[sj,j]=clime_lp(Sigma[sj,sj],lam,1)
       }
-      Omega[Theta[i-1],]<-0
-      Omega[,Theta[i-1]]<-0
     }
-    Theta[i]<-setdiff(seq(p),Theta)[which.min(diag(Omega[-Theta[seq(i)],-Theta[seq(i)]]))]
+    Theta[,sink]=Theta[sink,]=rep(0,p)
+    Theta[sink,sink]=Inf
   }
-  # last two variables
-  if (c(1,-1)%*%diag(S[setdiff(seq(p),Theta),setdiff(seq(p),Theta)])>0){
-    Theta[c(p-1,p)]<-setdiff(seq(p),Theta)
-  } else {
-    Theta[c(p,p-1)]<-setdiff(seq(p),Theta)
-  }
-  return(rev(Theta))
+  return(rev(unname(c(TO,setdiff(seq(p),TO)))))
 }
 
-# linear programming for rank-1 clime problems
-clime_lp<-function(S,i,lambda){
-  p<-dim(S)[1]
-  ei<-rep(0,p); ei[i]<-1
-  lsol<-Rglpk::Rglpk_solve_LP(obj = c(0,rep(0,p),rep(0,p),rep(1,p)),
-                       mat = rbind(cbind(rep(-1,p),S,-S,matrix(0,p,p)),
-                                   cbind(rep(-1,p),-S,S,matrix(0,p,p)),
-                                   c(1,rep(0,p*3)),
-                                   cbind(rep(0,p),diag(p),-diag(p),-diag(p)),
-                                   cbind(rep(0,p),-diag(p),diag(p),-diag(p))),
-                       dir = rep("<=",1+4*p),
-                       rhs = c(ei,-ei,lambda,rep(0,p*2)),
-                       control = list("tm_limit" = 500))
-  return(lsol$solution[2:(p+1)]-lsol$solution[(p+2):(1+p*2)])
+# clime utilities
+unit_vec<-function(p,i){v=rep(0,p);v[i]=1;return(v)}
+clime_lp<-function(Sigma,lam,j){
+  # Sigma: cov(X)
+  # lam: tuning parameter
+  # j: the j-th problem
+  p = dim(Sigma)[2]
+  f.obj = rep(1,p*2) # sum (u+v), u=max(x,0), v=max(-x,0), x=u-v
+  const.mat = rbind(
+    cbind(Sigma,-Sigma), # Sigma*(u-v) >= lam +ej
+    cbind(-Sigma,Sigma), # -Sigma*(u-v) >= lam-ej
+    cbind(diag(p),matrix(0,p,p)), # u>0
+    cbind(matrix(0,p,p),diag(p))  # v>0
+  )
+  const.dir = c(
+    rep("<=",2*p),rep(">=",2*p)
+  )
+  const.rhs = c(
+    rep(lam,p)+unit_vec(p,j),
+    rep(lam,p)-unit_vec(p,j),
+    rep(0,2*p)
+  )
+  lpout=lpSolve::lp(direction = "min",objective.in = f.obj,
+                    const.mat = const.mat,const.dir = const.dir,
+                    const.rhs = const.rhs)
+  return(lpout$solution[1:p]-lpout$solution[(p+1):(2*p)])
 }
 
-# clime solver
-clime<-function(S,lambda){
-  p<-dim(S)[1]
-  Omega<-sapply(1:p, function(i)clime_lp(S,i,lambda))
-  return(pmin(Omega,t(Omega)))
+clime_theta<-function(X,lam=NULL){
+  p=dim(X)[2]
+  n=dim(X)[1]
+  Sigma = cov(X)
+  if (is.null(lam)){lam = 4/sqrt(n)*sqrt(log(p/sqrt(0.05)))}
+  Omega = sapply(1:p, function(i)clime_lp(Sigma,lam,i))
+  Omega = (abs(Omega)<=abs(t(Omega)))*Omega+
+    (abs(Omega)>abs(t(Omega)))*t(Omega)
+  return(Omega)
+}
+
+cv_clime<-function(X){
+  p=dim(X)[2]
+  n=dim(X)[1]
+  Sigma = cov(X)
+  ws = sqrt(diag(Sigma))
+  lams=exp(seq(log(1e-4),log(0.8),length.out = 100))
+  ebics=sapply(1:100, function(j){
+    Theta = sapply(1:p, function(i)clime_lp(Sigma,lams[j],i))
+    Theta = (abs(Theta)<=abs(t(Theta)))*Theta+
+      (abs(Theta)>abs(t(Theta)))*t(Theta)
+    loglikGGM(S=Sigma,Theta=Theta)-sum(Theta!=0)/2*(log(p)+0.5*log(n))/n
+  })
+  return(clime_theta(X,lam = lams[which.max(ebics)]))
 }
 
 
