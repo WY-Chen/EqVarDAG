@@ -7,6 +7,7 @@ Estimate  DAG using topological ordering}
 \usage{
 EqVarDAG_HD_TD(
   X,
+  J = 3,
   mtd = "dlasso",
   alpha = 0.05,
   threshold = 0.1,

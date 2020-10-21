@@ -36,7 +36,7 @@
 #' #
 #' #$TO
 #' #[1] 1 2
-EqVarDAG_HD_TD<-function(X,mtd="dlasso",alpha=0.05,
+EqVarDAG_HD_TD<-function(X,J=3,mtd="dlasso",alpha=0.05,
                             threshold=1e-1,FCD=TRUE,precmtd="sqrtlasso"){
   # Input
   # X : n by p matrix of data
