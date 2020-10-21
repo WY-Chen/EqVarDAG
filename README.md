@@ -34,13 +34,23 @@ EqVarDAG_HD_CLIME(X)
 
 Specifially, the arguments to the function is
 ```R
+# low dimensional example
 EqVarDAG_TD(
   X,
   mtd = "ztest",
   alpha = 0.05,
-  threshold = 0.1,
+  threshold = NULL,
   FCD = NULL,
   precmtd = NULL
+)
+# high dimensional example
+EqVarDAG_HD_CLIME(
+  X,
+  mtd = "dlasso",
+  alpha = 0.05,
+  threshold = NULL,
+  FCD = TRUE,
+  precmtd = "sqrtlasso"
 )
 ```
 - X: n by p data matrix
