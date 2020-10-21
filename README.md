@@ -59,7 +59,7 @@ The details of the simulation settings are specified in our paper.
 
 ```R
 # run simulations
-source("/some/path/EqVarDAG/Experiments/sim_script_lowD.R")
+source("/some/path/EqVarDAG/Experiments/sims_low.R")
 simulation_lowD(p,n,N) 			# low-dimensional settings
 ```
 
@@ -67,7 +67,7 @@ High dimensional simulation is implemented with varies graph types, specified in
 
 ```R
 # run simulations
-source("/some/path/EqVarDAG/Experiments/sim_script_highD.R")
+source("/some/path/EqVarDAG/Experiments/sims_high.R")
 simulation_highD(p,n,N,type) 	# high-dimensional settings
 ```
 
