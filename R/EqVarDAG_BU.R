@@ -47,7 +47,7 @@ EqVarDAG_BU<-function(X,lambda=NULL,mtd="ztest",alpha=0.05,
   # TO : estimated topological ordering
   n<-dim(X)[1]
   p<-dim(X)[2]
-  TO=EqVarDAG_BU_internal(X)
+  TO=rev(EqVarDAG_BU_internal(X))
   adj=DAG_from_Ordering(X,TO,mtd,alpha,threshold,FCD,precmtd)
   return(list(adj=adj,TO=TO))
 }
