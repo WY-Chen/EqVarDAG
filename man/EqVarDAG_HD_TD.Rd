@@ -2,20 +2,49 @@
 % Please edit documentation in R/EqVarDAG_HD_TD.R
 \name{EqVarDAG_HD_TD}
 \alias{EqVarDAG_HD_TD}
-\title{Estimate topological ordering and DAG using high dimensional top-down approach}
+\title{Estimate topological ordering and DAG using high dimensional top-down approach (best subset reg)
+Estimate  DAG using topological ordering}
 \usage{
-EqVarDAG_HD_TD(X, J)
+EqVarDAG_HD_TD(
+  X,
+  lambda = NULL,
+  mtd = "ztest",
+  alpha = 0.05,
+  threshold = 0.1,
+  FCD = NULL,
+  precmtd = NULL
+)
 }
 \arguments{
-\item{X}{An n-by-p data matrix.}
+\item{X, Y:}{n x p and 1 x p matrix}
 
-\item{J}{maximum number of parents to condition on.}
+\item{alpha:}{desired selection significance level}
+
+\item{mtd:}{methods for learning DAG from topological orderings.
+"ztest": (p<n) [Multiple Testing and Error Control in Gaussian Graphical Model Selection. Drton and Perlman.2007]
+"rls": (p<n) fit recursive least squares using ggm package and threshold the regression coefs
+"chol": (p<n) perform cholesky decomposition and threshold the regression coefs
+"dlasso": debiased lasso (default with FCD=True and precmtd="sqrtlasso");
+ "lasso": lasso with fixed lambda from [Penalized likelihood methods for estimation of sparse high-dimensional directed acyclic graphs. Shojaie and Michailidis. 2010];
+ "adalasso": adaptive lasso with fixed lambda from [Shojaie and Michailidis. 2010];
+ "cvlasso": cross-validated lasso from glmnet;
+  "scallasso": scaled lasso.}
+
+\item{threshold:}{for rls and chol, the threshold level.}
+
+\item{FCD:}{for debiased lasso, use the FCD procedure [False Discovery Rate Control via Debiased Lasso. Javanmard and Montanari. 2018]
+or use individual tests to select support.}
+
+\item{precmtd:}{for debiased lasso, how to compute debiasing matrix
+"cv": node-wise lasso w/ joint 10 fold cv
+"sqrtlasso": square-root lasso (no tune, default)}
 }
 \value{
-Estimated Adjacency matrix and topological ordering.
+Adjacency matrix with ADJ[i,j]!=0 iff i->j, and topological ordering
 }
 \description{
-Estimate topological ordering and DAG using high dimensional top-down approach
+Estimate topological ordering and DAG using high dimensional top-down approach (best subset reg)
+Estimate  DAG using topological ordering
 }
 \examples{
 X1<-rnorm(100)

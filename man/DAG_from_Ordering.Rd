@@ -31,12 +31,12 @@ DAG_from_Ordering(
  "cvlasso": cross-validated lasso from glmnet;
   "scallasso": scaled lasso.}
 
-\item{threshold:}{for rls and chol, the threshold level.}
+\item{threshold:}{only used in rls and chol. the hard threshold level.}
 
-\item{FCD:}{for debiased lasso, use the FCD procedure [False Discovery Rate Control via Debiased Lasso. Javanmard and Montanari. 2018]
+\item{FCD:}{only used in debiased lasso,  the FCD procedure [False Discovery Rate Control via Debiased Lasso. Javanmard and Montanari. 2018]
 or use individual tests to select support.}
 
-\item{precmtd:}{for debiased lasso, how to compute debiasing matrix
+\item{precmtd:}{only used in debiased lasso, how to compute debiasing matrix
 "cv": node-wise lasso w/ joint 10 fold cv
 "sqrtlasso": square-root lasso (no tune, default)}
 }
