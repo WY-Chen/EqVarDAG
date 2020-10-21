@@ -36,8 +36,8 @@
 #' #
 #' #$TO
 #' #[1] 1 2
-EqVarDAG_HD_CLIME<-function(X,lambda=NULL,mtd="ztest",alpha=0.05,
-                            threshold=1e-1,FCD=NULL,precmtd=NULL){
+EqVarDAG_HD_CLIME<-function(X,mtd="dlasso",alpha=0.05,
+                            threshold=1e-1,FCD=TRUE,precmtd="sqrtlasso"){
   # Input
   # X : n by p matrix of data
   # cv: if true, use cv-ed lambda, else use lambdafix,default True

@@ -36,18 +36,16 @@
 #' #
 #' #$TO
 #' #[1] 1 2
-EqVarDAG_BU<-function(X,lambda=NULL,mtd="ztest",alpha=0.05,
+EqVarDAG_BU<-function(X,mtd="ztest",alpha=0.05,
                             threshold=1e-1,FCD=NULL,precmtd=NULL){
   # Input
   # X : n by p matrix of data
-  # cv: if true, use cv-ed lambda, else use lambdafix,default True
-  # lambdafix: customized lambda, default 0.1
   # Output
   # adj: estimated adjacency matrix
   # TO : estimated topological ordering
   n<-dim(X)[1]
   p<-dim(X)[2]
-  TO=rev(EqVarDAG_BU_internal(X))
+  TO=EqVarDAG_BU_internal(X)
   adj=DAG_from_Ordering(X,TO,mtd,alpha,threshold,FCD,precmtd)
   return(list(adj=adj,TO=TO))
 }

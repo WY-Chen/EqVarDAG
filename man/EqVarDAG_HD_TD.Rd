@@ -7,12 +7,11 @@ Estimate  DAG using topological ordering}
 \usage{
 EqVarDAG_HD_TD(
   X,
-  lambda = NULL,
-  mtd = "ztest",
+  mtd = "dlasso",
   alpha = 0.05,
   threshold = 0.1,
-  FCD = NULL,
-  precmtd = NULL
+  FCD = TRUE,
+  precmtd = "sqrtlasso"
 )
 }
 \arguments{

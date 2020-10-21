@@ -7,7 +7,6 @@ Estimate  DAG using topological ordering}
 \usage{
 EqVarDAG_BU(
   X,
-  lambda = NULL,
   mtd = "ztest",
   alpha = 0.05,
   threshold = 0.1,

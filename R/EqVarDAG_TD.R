@@ -36,7 +36,7 @@
 #' #
 #' #$TO
 #' #[1] 1 2
-EqVarDAG_TD<-function(X,lambda=NULL,mtd="ztest",alpha=0.05,
+EqVarDAG_TD<-function(X,mtd="ztest",alpha=0.05,
                       threshold=1e-1,FCD=NULL,precmtd=NULL){
   # Input
   # X : n by p matrix of data
