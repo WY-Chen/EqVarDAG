@@ -1,16 +1,29 @@
-# Copyright (c) 2018 - 2019  Wenyu Chen [wenyuc@uw.edu]
+# Copyright (c) 2018 - 2020  Wenyu Chen [wenyuc@uw.edu]
 # All rights reserved.  See the file COPYING for license terms.
 
-
-
 ###############
-### Main method with top-down approach
+### Main method with high-dimensional top-down approach (best subset reg)
 ###############
-#' Estimate topological ordering and DAG using high dimensional top-down approach
-#'
-#' @param X An n-by-p data matrix.
-#' @param J maximum number of parents to condition on.
-#' @return Estimated Adjacency matrix and topological ordering.
+#' Estimate topological ordering and DAG using high dimensional top-down approach (best subset reg)
+#' Estimate  DAG using topological ordering
+#' @param X,Y: n x p and 1 x p matrix
+#' @param alpha: desired selection significance level
+#' @param mtd: methods for learning DAG from topological orderings.
+#'  "ztest": (p<n) [Multiple Testing and Error Control in Gaussian Graphical Model Selection. Drton and Perlman.2007]
+#'  "rls": (p<n) fit recursive least squares using ggm package and threshold the regression coefs
+#'  "chol": (p<n) perform cholesky decomposition and threshold the regression coefs
+#'  "dlasso": debiased lasso (default with FCD=True and precmtd="sqrtlasso");
+#'   "lasso": lasso with fixed lambda from [Penalized likelihood methods for estimation of sparse high-dimensional directed acyclic graphs. Shojaie and Michailidis. 2010];
+#'   "adalasso": adaptive lasso with fixed lambda from [Shojaie and Michailidis. 2010];
+#'   "cvlasso": cross-validated lasso from glmnet;
+#'    "scallasso": scaled lasso.
+#' @param threshold: for rls and chol, the threshold level.
+#' @param FCD: for debiased lasso, use the FCD procedure [False Discovery Rate Control via Debiased Lasso. Javanmard and Montanari. 2018]
+#' or use individual tests to select support.
+#' @param precmtd: for debiased lasso, how to compute debiasing matrix
+#'               "cv": node-wise lasso w/ joint 10 fold cv
+#'               "sqrtlasso": square-root lasso (no tune, default)
+#' @return Adjacency matrix with ADJ[i,j]!=0 iff i->j, and topological ordering
 #' @examples
 #' X1<-rnorm(100)
 #' X2<-X1+rnorm(100)
@@ -23,45 +36,20 @@
 #' #
 #' #$TO
 #' #[1] 1 2
-EqVarDAG_HD_TD<-function(X,J){
+EqVarDAG_HD_TD<-function(X,lambda=NULL,mtd="ztest",alpha=0.05,
+                            threshold=1e-1,FCD=NULL,precmtd=NULL){
   # Input
   # X : n by p matrix of data
-  # J : maximum number of parents to condition on
+  # cv: if true, use cv-ed lambda, else use lambdafix,default True
+  # lambdafix: customized lambda, default 0.1
   # Output
   # adj: estimated adjacency matrix
   # TO : estimated topological ordering
   n<-dim(X)[1]
   p<-dim(X)[2]
-  rr<-rev(getOrdering(X,J)) # use J=5
-  result<-matrix(0,p,p)
-  for (ii in 1:(p-1)){
-    now<-rr[ii]
-    this<-sort(rr[(ii+1):p])
-    if (length(this)>1){
-      # variable selection
-      if (n>100){
-        lassom<-glmnet::cv.glmnet(X[,this],X[,now]  )
-        bfit<-coefficients(lassom)[-1]
-      } else {
-        lassom<-glmnet::glmnet(X[,this],X[,now] )
-        bic<-n*log(colSums((predict(lassom,
-                                    X[,this])-X[,now])^2)/n)+lassom$df*log(n)+
-          2*lassom$df*log(p-ii)
-        bfit<-coefficients(lassom)[,which(bic==min(bic))[1]][-1]
-      }
-      for (jj in 1:length(this)){
-        if(bfit[jj]!=0)
-          result[this[jj],now]<-1
-      }
-    } else {
-      # deal with the last two nodes
-      lmod<-summary(RcppEigen::fastLm(X[,now]~X[,this]))
-      if (lmod$coef[2,4]<0.05) {
-        result[this,now]<-1
-      }
-    }
-  }
-  return(list(adj=result,TO=rev(rr)))
+  TO=getOrdering(X,J)
+  adj=DAG_from_Ordering(X,TO,mtd,alpha,threshold,FCD,precmtd)
+  return(list(adj=adj,TO=TO))
 }
 
 ###############
