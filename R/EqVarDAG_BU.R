@@ -36,8 +36,11 @@
 #' #
 #' #$TO
 #' #[1] 1 2
-EqVarDAG_BU<-function(X,mtd="ztest",alpha=0.05,
-                            threshold=1e-1,FCD=NULL,precmtd=NULL){
+EqVarDAG_BU<-function(X,mtd = "dlasso",
+  alpha = 0.05,
+  threshold = NULL,
+  FCD = TRUE,
+  precmtd = "sqrtlasso"){
   # Input
   # X : n by p matrix of data
   # Output
