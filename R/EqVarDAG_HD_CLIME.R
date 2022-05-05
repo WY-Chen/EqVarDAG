@@ -47,7 +47,7 @@ EqVarDAG_HD_CLIME<-function(X,mtd="dlasso",alpha=0.05,
   # TO : estimated topological ordering
   n<-dim(X)[1]
   p<-dim(X)[2]
-  TO=EqVarDAG_HD_CLIME_internal(X,lambda)
+  TO=EqVarDAG_HD_CLIME_internal(X,NULL)
   adj=DAG_from_Ordering(X,TO,mtd,alpha,threshold,FCD,precmtd)
   return(list(adj=adj,TO=TO))
 }
