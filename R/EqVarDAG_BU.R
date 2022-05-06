@@ -81,5 +81,5 @@ EqVarDAG_BU_internal<-function(X){
     v<-which.min(diag(solve(S[-done,-done])))[1]
     done<-c(done,varmap[v])
   }
-  return(done[-1])
+  return(rev(done[-1]))
 }
