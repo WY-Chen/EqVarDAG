@@ -1,7 +1,7 @@
 Package: EqVarDAG
 Type: Package
 Title: Causal Discovery with Equal Variance Assumption
-Version: 2.0
+Version: 2.1
 Authors@R: as.person(c(
     "Wenyu Chen <wenyuc@uw.edu> [aut, cre]", 
     "Mathias Drton <md5@uw.edu> [aut]",
